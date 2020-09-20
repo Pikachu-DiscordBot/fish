@@ -6,7 +6,9 @@ import discord
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.utils import AsyncIter
-from redbot.core.utils._dpy_menus_utils import SimpleHybridMenu    # WARNING: Wont work on normal current red version
+from redbot.core.utils._dpy_menus_utils import (
+    SimpleHybridMenu,
+)  # WARNING: Wont work on normal current red version
 from redbot.core.utils.chat_formatting import humanize_number
 
 from .constants import *
