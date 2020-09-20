@@ -173,7 +173,7 @@ class Fish(commands.Cog):
                 else:
                     await bank.withdraw_credits(ctx.author, 150)
                 return
-            cash = _sum * 150000
+            cash = _sum * LEGENDARY_PRICE
             await self.config.user(ctx.author).legendary.clear()
             await self.sell_fishes(
                 ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum
@@ -185,7 +185,7 @@ class Fish(commands.Cog):
                 return await ctx.send(
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
-            cash = _sum * 5250
+            cash = _sum * RARE_PRICE
             await self.config.user(ctx.author).rare.clear()
             await self.sell_fishes(ctx, "rare", cash, _sum)
         elif type == "uncommon":
@@ -195,7 +195,7 @@ class Fish(commands.Cog):
                 return await ctx.send(
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
-            cash = _sum * 620
+            cash = _sum * UNCOMMON_PRICE
             await self.config.user(ctx.author).uncommon.clear()
             await self.sell_fishes(ctx, "uncommon", cash, _sum)
         elif type == "common":
@@ -205,7 +205,7 @@ class Fish(commands.Cog):
                 return await ctx.send(
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
-            cash = _sum * 170
+            cash = _sum * COMMON_PRICE
             await self.config.user(ctx.author).common.clear()
             await self.sell_fishes(ctx, "common", cash, _sum)
         elif type == "garbage":
@@ -215,7 +215,7 @@ class Fish(commands.Cog):
                 return await ctx.send(
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
-            cash = _sum * 9
+            cash = _sum * GARBAGE_PRICE
             await self.config.user(ctx.author).garbage.clear()
             await self.sell_fishes(ctx, "garbage", cash, _sum)
         elif type == "all":
@@ -233,11 +233,11 @@ class Fish(commands.Cog):
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
             cash = (
-                (lsum * 150000)
-                + (rsu * 5250)
-                + (usum * 620)
-                + (csum * 170)
-                + (gsum) * 9
+                (lsum * LEGENDARY_PRICE)
+                + (rsu * RARE_PRICE)
+                + (usum * UNCOMMON_PRICE)
+                + (csum * COMMON_PRICE)
+                + (gsum * GARBAGE_PRICE)
             )
             await self.config.user(ctx.author).clear()
             await self.sell_fishes(ctx, "all", cash, _sum)

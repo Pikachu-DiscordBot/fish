@@ -128,3 +128,10 @@ EVENTS = [
     "Your line snaps while you cast out and pay {amount} {currency} for a new spool.",
     "Your hook is blunt and you pay {amount} {currency} for a new set from the shop.",
 ]
+
+LEGENDARY_PRICE = 150000
+EPIC_PRICE = 6500
+RARE_PRICE = 3000
+UNCOMMON_PRICE = 650
+COMMON_PRICE = 140
+GARBAGE_PRICE = 7
