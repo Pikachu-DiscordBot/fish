@@ -1,5 +1,6 @@
 import asyncio
 import random
+from datetime import date
 from typing import List, Literal
 
 import discord
@@ -106,9 +107,19 @@ class Fish(commands.Cog):
             async with self.config.user(ctx.author).all_rods() as rods:
                 rods[new_rod.lower()] += 1
             return
-        fish = random.choices(FISHES, weights=WEIGHTS[rod], k=1)[0]
+
+        a = date.today().strftime("%d/%m/%Y")
+        state = random.getstate()
+        random.seed(a)
+        weather = random.choice(WEATHER)
+        random.setstate(state)
+        weights = []
+        for i, effect in enumerate(WEATHER_EFFECTS[weather]):
+            weights.append(WEIGHTS[rod][i] + effect)
+
+        fish = random.choices(FISHES, weights=weights, k=1)[0]
         msg = await ctx.send(
-            f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line on their {rod.title()}.\n{ROD} **|** You caught a {fish}"
+            f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line on their {rod.title()} on a {weather} day.\n{ROD} **|** You caught a {fish}"
         )
         fish_type = FISHES_TYPE[fish]
         await self.deposit_fish(ctx.author, fish_type, fish)
