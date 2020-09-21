@@ -3,13 +3,14 @@ import random
 from typing import List, Literal
 
 import discord
+import tabulate
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
 from redbot.core.utils import AsyncIter
 from redbot.core.utils._dpy_menus_utils import (
     SimpleHybridMenu,
 )  # WARNING: Wont work on normal current red version
-from redbot.core.utils.chat_formatting import humanize_number
+from redbot.core.utils.chat_formatting import box, humanize_number
 
 from .constants import *
 from .menus import LeaderboardSource
@@ -49,9 +50,14 @@ class Fish(commands.Cog):
             rod="wooden rod",
             all_rods={
                 "wooden rod": 1,
+                "magnet rod": 0,
                 "fly-fishing rod": 0,
+                "spinning rod": 0,
                 "harpoon": 0,
+                "telescopic rod": 0,
+                "carbon-fibre rod": 0,
                 "metal rod": 0,
+                "trusty rod": 0,
                 "pikachu rod": 0,
             },
         )
@@ -84,14 +90,15 @@ class Fish(commands.Cog):
             return
         await bank.withdraw_credits(ctx.author, 10)
         if random.randint(1, 350) == 350:
-            a = f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You caught a \N{SHARK}"
+            animal = random.choice(["\N{SHARK}", "\N{SPOUTING WHALE}"])
+            a = f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You caught a {animal}"
             msg = await ctx.send(a)
             await asyncio.sleep(2)
-            a += "\nThe shark managed to escape."
+            a += "\nThe fish managed to escape."
             await msg.edit(content=a)
             return
         rod = await self.config.user(ctx.author).rod()
-        if random.choices([1, 2], weights=[0.98, 0.02], k=1)[0] == 2:
+        if random.choices([1, 2], weights=[0.98, 0.2], k=1)[0] == 2:
             new_rod = random.choices(RODS, weights=RODS_WEIGHT, k=1)[0]
             await ctx.send(
                 f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You feel a tug on the line and reel it in. You have found a new {new_rod}!"
@@ -113,11 +120,12 @@ class Fish(commands.Cog):
         embed = discord.Embed(
             title=f"{ctx.author.name}'s rods", color=await ctx.embed_colour()
         )
-        msg = ""
-        for rod in conf:
-            if rod in RODS:
-                msg += f"**{rod.title()}** - {conf[rod]}\n"
-        embed.description = msg
+        data = []
+        for rod in RODS:
+            data.append([rod.title(), conf[rod]])
+        embed.description = box(
+            tabulate.tabulate(data, headers=["Rods", "Amount"]), lang="prolog"
+        )
         await ctx.send(embed=embed)
 
     @fish.command(name="info")
@@ -295,13 +303,17 @@ class Fish(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
-    async def fishsim(self, ctx, amount: int, *, rod):
+    async def fishsim(self, ctx, amount: int):
         """."""
         a = {k: 0 for k in FISHES}
-        for i in range(amount):
-            fish = random.choices(FISHES, weights=WEIGHTS[rod], k=1)[0]
-            a[fish] += 1
-        await ctx.send(a)
+        for rod in RODS:
+            for _ in range(amount):
+                fish = random.choices(FISHES, weights=WEIGHTS[rod], k=1)[0]
+                a[fish] += 1
+            for fish in a:
+                a[fish] = round(a[fish] / amount * 100, 3)
+            msg = f"{rod} - {a}"
+            await ctx.send(msg)
 
     async def get_leaderboard(self, guild: discord.Guild = None) -> List[tuple]:
         raw_accounts = await self.config.all_users()
