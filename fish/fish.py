@@ -98,7 +98,7 @@ class Fish(commands.Cog):
             await msg.edit(content=a)
             return
         rod = await self.config.user(ctx.author).rod()
-        if random.choices([1, 2], weights=[0.98, 0.2], k=1)[0] == 2:
+        if random.choices([1, 2], weights=[0.98, 0.02], k=1)[0] == 2:
             new_rod = random.choices(RODS, weights=RODS_WEIGHT, k=1)[0]
             await ctx.send(
                 f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You feel a tug on the line and reel it in. You have found a new {new_rod}!"
@@ -122,7 +122,8 @@ class Fish(commands.Cog):
         )
         data = []
         for rod in RODS:
-            data.append([rod.title(), conf[rod]])
+            if conf[rod] > 0:
+                data.append([rod.title(), conf[rod]])
         embed.description = box(
             tabulate.tabulate(data, headers=["Rods", "Amount"]), lang="prolog"
         )
@@ -159,8 +160,10 @@ class Fish(commands.Cog):
             msg = ""
             for fish in conf[fish_type]:
                 if fish in FISHES:
-                    msg += f"{fish} - {conf[fish_type][fish]}\n"
-            embed.add_field(name=fish_type.title(), value=msg)
+                    if conf[fish_type][fish] > 0:
+                        msg += f"{fish} - {conf[fish_type][fish]}\n"
+            if msg:
+                embed.add_field(name=fish_type.title(), value=msg)
         await ctx.send(embed=embed)
 
     @fish.command(name="sell")

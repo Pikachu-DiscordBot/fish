@@ -38,7 +38,7 @@ RODS_PRICES = {
     "telescopic rod": 420000,
     "carbon-fibre rod": 800000,
     "metal rod": 1000000,
-    "trusty rod": 5000000,
+    "trusty rod": 7500000,
     "pikachu rod": 15000000,
 }
 
@@ -235,8 +235,8 @@ EVENTS = [
     "Your hook is blunt and you pay {amount} {currency} for a new set from the shop.",
 ]
 
-LEGENDARY_PRICE = 150000
-EPIC_PRICE = 6500
+LEGENDARY_PRICE = 35000
+EPIC_PRICE = 7000
 RARE_PRICE = 3000
 UNCOMMON_PRICE = 650
 COMMON_PRICE = 140
