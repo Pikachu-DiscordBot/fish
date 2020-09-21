@@ -1,19 +1,20 @@
 import asyncio
 import random
 from datetime import date
-from typing import List, Literal
+from typing import Literal
 
 import discord
 import tabulate
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
-from redbot.core.utils import AsyncIter
 from redbot.core.utils._dpy_menus_utils import (
     SimpleHybridMenu,
 )  # WARNING: Wont work on normal current red version
 from redbot.core.utils.chat_formatting import box, humanize_number
+from redbot.core.utils.predicates import MessagePredicate
 
 from .constants import *
+from .functions import check_weekend, get_leaderboard
 from .menus import LeaderboardSource
 
 
@@ -22,7 +23,8 @@ class Fish(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, 1398467138476, force_registration=True)
         self.config.register_user(
-            legendary={
+            legendary={"\N{DRAGON}": 0},
+            epic={
                 "\N{SHARK}": 0,
                 "\N{SPOUTING WHALE}": 0,
             },
@@ -108,16 +110,17 @@ class Fish(commands.Cog):
                 rods[new_rod.lower()] += 1
             return
 
-        a = date.today().strftime("%d/%m/%Y")
+        a = date.today().strftime("%d")
         state = random.getstate()
         random.seed(a)
-        weather = random.choice(WEATHER)
+        weather = random.choice(WEATHER_EFFECTS)
         random.setstate(state)
-        weights = []
-        for i, effect in enumerate(WEATHER_EFFECTS[weather]):
-            weights.append(WEIGHTS[rod][i] + effect)
+        if check_weekend():
+            weights = WEIGHTS_WEEKEND(weather)
+        else:
+            weights = WEIGHTS(weather)
 
-        fish = random.choices(FISHES, weights=weights, k=1)[0]
+        fish = random.choices(FISHES, weights=weights[rod], k=1)[0]
         msg = await ctx.send(
             f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line on their {rod.title()} on a {weather} day.\n{ROD} **|** You caught a {fish}"
         )
@@ -263,7 +266,12 @@ class Fish(commands.Cog):
                 + (csum * COMMON_PRICE)
                 + (gsum * GARBAGE_PRICE)
             )
-            await self.config.user(ctx.author).clear()
+            await self.config.user(ctx.author).garbage.clear()
+            await self.config.user(ctx.author).common.clear()
+            await self.config.user(ctx.author).uncommon.clear()
+            await self.config.user(ctx.author).rare.clear()
+            await self.config.user(ctx.author).epic.clear()
+            await self.config.user(ctx.author).legendary.clear()
             await self.sell_fishes(ctx, "all", cash, _sum)
 
     async def sell_fishes(self, ctx, type, amount, sum):
@@ -308,7 +316,7 @@ class Fish(commands.Cog):
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
         """Fish Leaderboard"""
-        data = await self.get_leaderboard(ctx.guild if not global_users else None)
+        data = await get_leaderboard(ctx.guild if not global_users else None)
         await SimpleHybridMenu(
             source=LeaderboardSource(data),
             cog=self,
@@ -317,39 +325,69 @@ class Fish(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
-    async def fishsim(self, ctx, amount: int):
+    async def fishsim(self, ctx, amount: int, rod):
         """."""
+        msg = ""
         a = {k: 0 for k in FISHES}
-        for rod in RODS:
+        for weather in WEATHER_EFFECTS:
+            weights = WEIGHTS(weather)
             for _ in range(amount):
-                fish = random.choices(FISHES, weights=WEIGHTS[rod], k=1)[0]
+                fish = random.choices(FISHES, weights=weights[rod], k=1)[0]
                 a[fish] += 1
             for fish in a:
                 a[fish] = round(a[fish] / amount * 100, 3)
-            msg = f"{rod} - {a}"
+            msg = f"{rod} - {weather} - {a}"
             await ctx.send(msg)
 
-    async def get_leaderboard(self, guild: discord.Guild = None) -> List[tuple]:
-        raw_accounts = await self.config.all_users()
-        if guild is not None:
-            tmp = raw_accounts.copy()
-            for acc in tmp:
-                if not guild.get_member(acc):
-                    del raw_accounts[acc]
-        a = []
-        async for (k, v) in AsyncIter(raw_accounts.items(), steps=100):
-            lsum, rsu, usum, csum, gsum = (
-                sum(v["legendary"].values()),
-                sum(v["rare"].values()),
-                sum(v["uncommon"].values()),
-                sum(v["common"].values()),
-                sum(v["garbage"].values()),
+    @commands.group()
+    async def fishshop(self, ctx):
+        """Buy and sell your fishing needs."""
+
+    @fishshop.command(name="buy")
+    async def shop_buy(self, ctx, *, item=None):
+        """Buy your fishing needs."""
+        if item is None:
+            data = [
+                [rod.title(), humanize_number(RODS_PRICES[rod])] for rod in RODS[1:]
+            ]
+            embed = discord.Embed(
+                title="Rod Prices",
+                description=box(
+                    tabulate.tabulate(data, headers=["Rod", "Price"]), lang="prolog"
+                ),
+                color=await ctx.embed_colour(),
             )
-            _sum = lsum + rsu + usum + csum + gsum
-            a.append((k, {"fishes": _sum, "legendaries": lsum}))
-        sorted_acc = sorted(
-            a,
-            key=lambda x: x[1]["fishes"],
-            reverse=True,
-        )
-        return sorted_acc
+            await ctx.send(embed=embed)
+            return
+        if item not in RODS[1:]:  # Will eventually have more options.
+            await ctx.send("No such item exists.")
+            return
+        price = RODS_PRICES[item]
+        if not await bank.can_spend(ctx.author, price):
+            return await ctx.send("You cannot afford that item.")
+        msg = ""
+        if check_weekend():
+            msg += "The shopkeeper offers your a weekend discount of 10%\n"
+            price = price * 0.90
+        msg += f"Are you sure you want to spend {humanize_number(price)} {await bank.get_currency_name(ctx.guild)} on a {item.title()}?"
+        await ctx.send(msg)
+        try:
+            pred = MessagePredicate.yes_or_no(ctx, user=ctx.author)
+            await ctx.bot.wait_for("message", check=pred, timeout=20)
+        except asyncio.TimeoutError:
+            await ctx.send("You left the shop without purchasing anything.")
+            return
+        if not pred.result:
+            await ctx.send(
+                "Alright then, you leave the shop without purchasing anything."
+            )
+            return
+        await bank.withdraw_credits(ctx.author, price)
+        async with self.config.user(ctx.author).all_rods() as rods:
+            rods[item.lower()] += 1
+        await ctx.send(f"Congratulations on your new purchase of a {item.title()}!")
+
+    # @fishshop.command(name="sell")
+    # async def fish_sell(self, ctx, *, item):
+    #     """Sell your unused fishing goods"""
+    #     pass
