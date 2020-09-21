@@ -4,7 +4,7 @@ import discord
 from redbot.core.utils import AsyncIter
 
 def check_weekend():
-    return True #if datetime.today().weekday() in [4, 5, 6] else False
+    return True if datetime.today().weekday() in [4, 5, 6] else False
 
 async def get_leaderboard(self, guild: discord.Guild = None) -> List[tuple]:
     raw_accounts = await self.config.all_users()
