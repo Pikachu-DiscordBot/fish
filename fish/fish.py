@@ -99,7 +99,7 @@ class Fish(commands.Cog):
             await msg.edit(content=a)
             return
         rod = await self.config.user(ctx.author).rod()
-        if random.choices([1, 2], weights=[0.98, 0.02], k=1)[0] == 2:
+        if random.choices([1, 2], weights=[0.965, 0.035], k=1)[0] == 2:
             new_rod = random.choices(RODS, weights=RODS_WEIGHT, k=1)[0]
             await ctx.send(
                 f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You feel a tug on the line and reel it in. You have found a new {new_rod}!"
