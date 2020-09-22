@@ -169,7 +169,7 @@ class Fish(commands.Cog):
             title=f"{ctx.author.name}'s fishes", color=await ctx.embed_colour()
         )
         for fish_type in conf:
-            if fish_type not in ["legendary", "rare", "uncommon", "common", "garbage"]:
+            if fish_type not in ["legendary", "epic", "rare", "uncommon", "common", "garbage"]:
                 continue
             msg = ""
             for fish in conf[fish_type]:
@@ -205,6 +205,16 @@ class Fish(commands.Cog):
             await self.sell_fishes(
                 ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum
             )
+        elif type == "epic":
+            conf = await self.config.user(ctx.author).epic()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * EPIC_PRICE
+            await self.config.user(ctx.author).rare.clear()
+            await self.sell_fishes(ctx, "rare", cash, _sum)
         elif type == "rare":
             conf = await self.config.user(ctx.author).rare()
             _sum = sum(conf.values())
@@ -247,20 +257,22 @@ class Fish(commands.Cog):
             await self.sell_fishes(ctx, "garbage", cash, _sum)
         elif type == "all":
             conf = await self.config.user(ctx.author).all()
-            lsum, rsu, usum, csum, gsum = (
+            lsum, esum, rsu, usum, csum, gsum = (
                 sum(conf["legendary"].values()),
+                sum(conf["epic"].values()),
                 sum(conf["rare"].values()),
                 sum(conf["uncommon"].values()),
                 sum(conf["common"].values()),
                 sum(conf["garbage"].values()),
             )
-            _sum = lsum + rsu + usum + csum + gsum
+            _sum = lsum + esum + rsu + usum + csum + gsum
             if _sum == 0:
                 return await ctx.send(
                     "You don't have anything to sell, stop wasting the shopkeepers time."
                 )
             cash = (
                 (lsum * LEGENDARY_PRICE)
+                + (esum * EPIC_PRICE)
                 + (rsu * RARE_PRICE)
                 + (usum * UNCOMMON_PRICE)
                 + (csum * COMMON_PRICE)
