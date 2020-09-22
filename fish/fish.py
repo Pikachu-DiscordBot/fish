@@ -112,7 +112,7 @@ class Fish(commands.Cog):
         if not await bank.can_spend(ctx.author, 10):
             return await ctx.send("You can't afford to cast out your line!")
         today = datetime.now()
-        a = today.strftime("%j%p") + str(bot.user.id)
+        a = today.strftime("%j%p") + str(self.bot.user.id)
         # Use datetime and get AM/PM to have more frequent weather changes
         state = random.getstate()
         random.seed(a)
