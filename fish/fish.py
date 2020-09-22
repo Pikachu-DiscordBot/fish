@@ -1,6 +1,6 @@
 import asyncio
 import random
-from datetime import date
+from datetime import datetime, timedelta
 from typing import Literal
 
 import discord
@@ -110,7 +110,8 @@ class Fish(commands.Cog):
                 rods[new_rod.lower()] += 1
             return
 
-        a = date.today().strftime("%d")
+        today = datetime.now()
+        a = today.strftime("%j%p") + str(self.bot.user.id)
         state = random.getstate()
         random.seed(a)
         weather = random.choice(WEATHER_EFFECTS)
@@ -320,29 +321,27 @@ class Fish(commands.Cog):
     async def deposit_fish(
         self,
         user: discord.Member,
-        _type: Literal["legendary", "rare", "uncommon", "common", "garbage"],
+        _type: Literal["legendary", "epic", "rare", "uncommon", "common", "garbage"],
         fish: str,
     ):
         if _type == "legendary":
-            fishes = await self.config.user(user).legendary()
-            fishes[fish] += 1
-            await self.config.user(user).legendary.set(fishes)
+            async with self.config.user(user).legendary() as fishes:
+                fishes[fish] += 1
+        elif _type == "epic":
+            async with self.config.user(user).epic() as fishes:
+                fishes[fish] += 1
         elif _type == "rare":
-            fishes = await self.config.user(user).rare()
-            fishes[fish] += 1
-            await self.config.user(user).rare.set(fishes)
+            async with self.config.user(user).rare() as fishes:
+                fishes[fish] += 1
         elif _type == "uncommon":
-            fishes = await self.config.user(user).uncommon()
-            fishes[fish] += 1
-            await self.config.user(user).uncommon.set(fishes)
+            async with self.config.user(user).uncommon() as fishes:
+                fishes[fish] += 1
         elif _type == "common":
-            fishes = await self.config.user(user).common()
-            fishes[fish] += 1
-            await self.config.user(user).common.set(fishes)
+            async with self.config.user(user).common() as fishes:
+                fishes[fish] += 1
         elif _type == "garbage":
-            fishes = await self.config.user(user).garbage()
-            fishes[fish] += 1
-            await self.config.user(user).garbage.set(fishes)
+            async with self.config.user(user).garbage() as fishes:
+                fishes[fish] += 1
 
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
@@ -369,6 +368,36 @@ class Fish(commands.Cog):
                 a[fish] = round(a[fish] / amount * 100, 3)
             msg = f"{rod} - {weather} - {a}"
             await ctx.send(msg)
+
+    @fish.command(aliases=["forecast"])
+    async def weather(self, ctx):
+        """
+        Shows the weather forecast for the next few days
+        """
+        today = datetime.now()
+        msg = ""
+        em = discord.Embed(
+            title="7 Day Weather Forecast", colour=await self.bot.get_embed_colour(ctx)
+        )
+        ordinal = lambda n: "%d%s" % (
+            n,
+            "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
+        )
+        for i in range(7):
+            if i < 3:
+                a = today.strftime("%j%p") + str(self.bot.user.id)
+            else:
+                a = today.strftime("%j%p") + str(self.bot.user.id + i)
+                # Add extra randomness to simulate real life inaccurate weathermen
+            random.seed(a)
+            weather = random.choice(WEATHER_EFFECTS)
+            msg += f"{ordinal(today.day)} - {weather}\n"
+            today = today + timedelta(days=1)
+        em.description = msg
+        if ctx.channel.permissions_for(ctx.me).embed_links:
+            await ctx.send(embed=em)
+        else:
+            await ctx.send(f"7 Day Weather Forecast\n{msg}")
 
     @commands.group()
     async def fishshop(self, ctx):
