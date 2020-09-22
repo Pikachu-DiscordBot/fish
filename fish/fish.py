@@ -2,8 +2,12 @@ import asyncio
 import random
 import discord
 import tabulate
+import json
+import unicodedata
+import logging
 
-from datetime import date
+from io import BytesIO
+from datetime import datetime
 from typing import Literal
 
 from redbot.core import Config, bank, commands
@@ -382,6 +386,49 @@ class Fish(commands.Cog):
             msg = f"{rod} - {weather} - {a}"
             await ctx.send(msg)
 
+    @commands.is_owner()
+    @commands.command()
+    async def fishsime(self, ctx, amount: int):
+        """
+        Generate a json file of number of catches
+        """
+        async with ctx.typing():
+            msg = ""
+            we_str = [
+                ":" + ":".join(unicodedata.name(i).lower().replace(" ", "_") for i in weather) + ":"
+                for weather in WEATHER_EFFECTS
+            ]
+            final_dict = {}
+            for rod in RODS:
+                final_dict[rod] = {}
+                for weather in WEATHER_EFFECTS:
+                    a = {k: 0 for k in FISHES}
+                    weights = WEIGHTS(weather)
+                    for _ in range(amount):
+                        fish = random.choices(FISHES, weights=weights[rod], k=1)[0]
+                        a[fish] += 1
+                    final_dict[rod][weather] = a
+            for rod, data in final_dict.items():
+                tab_list = []
+                msg += f"# {rod.title()}\n\n"
+                for weather, fishes in data.items():
+                    for fish, count in fishes.items():
+                        fish_name = (
+                            ":"
+                            + ":".join(unicodedata.name(i).lower().replace(" ", "_") for i in fish)
+                            + ":"
+                        )
+                        if fish_name not in [i[0] for i in tab_list]:
+                            tab_list.append([fish_name, count])
+                        else:
+                            for i in tab_list:
+                                if fish_name == i[0]:
+                                    i.append(count)
+                msg += tabulate.tabulate(tab_list, headers=we_str, tablefmt="github") + "\n\n"
+            data = BytesIO(msg.encode("utf8"))
+            file = discord.File(data, filename="fishsim.md")
+            await ctx.send(files=[file])
+
     @commands.group()
     async def fishshop(self, ctx):
         """Buy and sell your fishing needs."""
@@ -390,14 +437,10 @@ class Fish(commands.Cog):
     async def shop_buy(self, ctx, *, item=None):
         """Buy your fishing needs."""
         if item is None:
-            data = [
-                [rod.title(), humanize_number(RODS_PRICES[rod])] for rod in RODS[1:]
-            ]
+            data = [[rod.title(), humanize_number(RODS_PRICES[rod])] for rod in RODS[1:]]
             embed = discord.Embed(
                 title="Rod Prices",
-                description=box(
-                    tabulate.tabulate(data, headers=["Rod", "Price"]), lang="prolog"
-                ),
+                description=box(tabulate.tabulate(data, headers=["Rod", "Price"]), lang="prolog"),
                 color=await ctx.embed_colour(),
             )
             await ctx.send(embed=embed)
