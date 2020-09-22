@@ -111,19 +111,31 @@ class Fish(commands.Cog):
             return await ctx.send("You think you can trick me? Nice try.")
         if not await bank.can_spend(ctx.author, 10):
             return await ctx.send("You can't afford to cast out your line!")
+        today = datetime.now()
+        a = today.strftime("%j%p") + str(bot.user.id)
+        # Use datetime and get AM/PM to have more frequent weather changes
+        state = random.getstate()
+        random.seed(a)
+        weather = random.choice(WEATHER_EFFECTS)
+        random.setstate(state)
+        if check_weekend():
+            weights = WEIGHTS_WEEKEND(weather)
+        else:
+            weights = WEIGHTS(weather)
 
         if random.randint(1, 100) == 100:
             a = random.randint(200, 490)
+            events = EVENTS if weather not in STORMY_WEATHER else STORM_EVENTS
             if await bank.can_spend(ctx.author, a):
                 await ctx.send(
-                    random.choice(EVENTS).format(
+                    random.choice(events).format(
                         amount=a, currency=await bank.get_currency_name(guild=ctx.guild)
                     )
                 )
                 await bank.withdraw_credits(ctx.author, a)
             else:
                 await bank.set_balance(ctx.author, 0)
-                event = random.choice(EVENTS).format(
+                event = random.choice(events).format(
                     amount=a, currency=await bank.get_currency_name(guild=ctx.guild)
                 )
                 event += "\nYou didn't have enough to pay off the remaining balance and are now bankrupt."
@@ -131,11 +143,12 @@ class Fish(commands.Cog):
             return
         await bank.withdraw_credits(ctx.author, 10)
         if random.randint(1, 350) == 350:
-            animal = random.choice(["\N{SHARK}", "\N{SPOUTING WHALE}"])
+            animals = ["\N{SHARK}", "\N{SPOUTING WHALE}"] if weather not in STORMY_WEATHER else ["\N{DRAGON}"]
+            animal = random.choice(animals)
             a = f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You caught a {animal}"
             msg = await ctx.send(a)
             await asyncio.sleep(2)
-            a += "\nThe fish managed to escape."
+            a += f"\nThe {animal} managed to escape."
             await msg.edit(content=a)
             return
         rod = await self.config.user(ctx.author).rod()
@@ -148,16 +161,6 @@ class Fish(commands.Cog):
                 rods[new_rod.lower()] += 1
             return
 
-        a = date.today().day
-        state = random.getstate()
-        random.seed(a)
-        weather = random.choice(WEATHER_EFFECTS)
-        random.setstate(state)
-        if check_weekend():
-            weights = WEIGHTS_WEEKEND(weather)
-        else:
-            weights = WEIGHTS(weather)
-
         fish = random.choices(FISHES, weights=weights[rod], k=1)[0]
         msg = await ctx.send(
             f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line on their {rod.title()} on a {weather} day.\n{ROD} **|** You caught a {fish}"
@@ -169,16 +172,12 @@ class Fish(commands.Cog):
     async def fish_rods(self, ctx):
         """View your collection of rods."""
         conf = await self.config.user(ctx.author).all_rods()
-        embed = discord.Embed(
-            title=f"{ctx.author.name}'s rods", color=await ctx.embed_colour()
-        )
+        embed = discord.Embed(title=f"{ctx.author.name}'s rods", color=await ctx.embed_colour())
         data = []
         for rod in RODS:
             if conf[rod] > 0:
                 data.append([rod.title(), conf[rod]])
-        embed.description = box(
-            tabulate.tabulate(data, headers=["Rods", "Amount"]), lang="prolog"
-        )
+        embed.description = box(tabulate.tabulate(data, headers=["Rods", "Amount"]), lang="prolog")
         await ctx.send(embed=embed)
 
     @fish.command(name="info")
@@ -237,9 +236,7 @@ class Fish(commands.Cog):
                 return
             cash = _sum * LEGENDARY_PRICE
             await self.config.user(ctx.author).legendary.clear()
-            await self.sell_fishes(
-                ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum
-            )
+            await self.sell_fishes(ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum)
         elif type == "epic":
             conf = await self.config.user(ctx.author).epic()
             _sum = sum(conf.values())
@@ -464,9 +461,7 @@ class Fish(commands.Cog):
             await ctx.send("You left the shop without purchasing anything.")
             return
         if not pred.result:
-            await ctx.send(
-                "Alright then, you leave the shop without purchasing anything."
-            )
+            await ctx.send("Alright then, you leave the shop without purchasing anything.")
             return
         await bank.withdraw_credits(ctx.author, price)
         async with self.config.user(ctx.author).all_rods() as rods:
