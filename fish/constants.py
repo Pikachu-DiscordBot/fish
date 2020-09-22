@@ -306,7 +306,7 @@ EVENTS = [
     "Your hook is blunt and you pay {amount} {currency} for a new set from the shop.",
 ]
 STORM_EVENTS = [
-    "A bolt of \N{HIGH VOLTAGE SIGN}\N{VARIATION SELECTOR-16} comes out of nowhere and nearly zaps you. You spend {amount} {currency} to buy new pants.",
+    "A bolt of \N{HIGH VOLTAGE SIGN} comes out of nowhere and nearly zaps you. You spend {amount} {currency} to buy new pants.",
 ]
 
 LEGENDARY_PRICE = 150000

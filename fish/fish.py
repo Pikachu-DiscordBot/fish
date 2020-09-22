@@ -7,8 +7,8 @@ import unicodedata
 import logging
 
 from io import BytesIO
-from datetime import datetime
-from typing import Literal
+from datetime import datetime, timedelta
+from typing import Literal, Optional
 
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
@@ -19,7 +19,26 @@ from redbot.core.utils._dpy_menus_utils import (
 from redbot.core.utils.chat_formatting import box, humanize_number
 from redbot.core.utils.predicates import MessagePredicate
 
-from .constants import *
+from .constants import (
+    FISHES_TYPE,
+    WEIGHTS,
+    RODS,
+    RODS_WEIGHT,
+    RODS_PRICES,
+    WEIGHTS_WEEKEND,
+    FISHES,
+    WEATHER_EFFECTS,
+    ROD,
+    STORMY_WEATHER,
+    EVENTS,
+    STORM_EVENTS,
+    LEGENDARY_PRICE,
+    EPIC_PRICE,
+    RARE_PRICE,
+    UNCOMMON_PRICE,
+    COMMON_PRICE,
+    GARBAGE_PRICE,
+)
 from .functions import check_weekend, get_leaderboard
 from .menus import LeaderboardSource
 
@@ -103,21 +122,25 @@ class Fish(commands.Cog):
             },
         )
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, usage="fish")
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def fish(self, ctx):
+    async def fish(self, ctx, weather: Optional[str] = None):
         """Go fishing."""
         if ctx.assume_yes:
             return await ctx.send("You think you can trick me? Nice try.")
         if not await bank.can_spend(ctx.author, 10):
             return await ctx.send("You can't afford to cast out your line!")
-        today = datetime.now()
-        a = today.strftime("%j%p") + str(self.bot.user.id)
-        # Use datetime and get AM/PM to have more frequent weather changes
-        state = random.getstate()
-        random.seed(a)
-        weather = random.choice(WEATHER_EFFECTS)
-        random.setstate(state)
+        if weather and await self.bot.is_owner(ctx.author) and weather in WEATHER_EFFECTS:
+            weather = weather
+        else:
+            today = datetime.now()
+            a = today.strftime("%j%p") + str(self.bot.user.id)
+            # Use datetime and get AM/PM to have more frequent weather changes
+            state = random.getstate()
+            random.seed(a)
+            weather = random.choice(WEATHER_EFFECTS)
+            random.setstate(state)
+
         if check_weekend():
             weights = WEIGHTS_WEEKEND(weather)
         else:
@@ -143,7 +166,11 @@ class Fish(commands.Cog):
             return
         await bank.withdraw_credits(ctx.author, 10)
         if random.randint(1, 350) == 350:
-            animals = ["\N{SHARK}", "\N{SPOUTING WHALE}"] if weather not in STORMY_WEATHER else ["\N{DRAGON}"]
+            animals = (
+                ["\N{SHARK}", "\N{SPOUTING WHALE}"]
+                if weather not in STORMY_WEATHER
+                else ["\N{DRAGON}"]
+            )
             animal = random.choice(animals)
             a = f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line.\n{ROD} **|** You caught a {animal}"
             msg = await ctx.send(a)
@@ -365,6 +392,33 @@ class Fish(commands.Cog):
             delete_message_after=True,
         ).start(ctx=ctx, wait=False)
 
+    @fish.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def weather(self, ctx):
+        """
+        Shows the weather forecast for the next few days
+        """
+        today = datetime.now()
+        msg = ""
+        em = discord.Embed(
+            title="7 Day Weather Forecast", colour=await self.bot.get_embed_colour(ctx)
+        )
+        for i in range(7):
+            if i < 3:
+                a = today.strftime("%j%p") + str(self.bot.user.id)
+            else:
+                a = today.strftime("%j%p") + str(self.bot.user.id + i)
+                # Add extra randomness to simulate real life inaccurate weathermen
+            random.seed(a)
+            weather = random.choice(WEATHER_EFFECTS)
+            msg += f"{today.day} - {weather}\n"
+            today = today + timedelta(days=1)
+        em.description = msg
+        if ctx.channel.permissions_for(ctx.me).embed_links:
+            await ctx.send(embed=em)
+        else:
+            await ctx.send(f"7 Day Weather Forecast\n{msg}")
+
     @commands.is_owner()
     @commands.command()
     async def fishsim(self, ctx, amount: int, rod):
@@ -390,7 +444,9 @@ class Fish(commands.Cog):
         async with ctx.typing():
             msg = ""
             we_str = [
-                ":" + ":".join(unicodedata.name(i).lower().replace(" ", "_") for i in weather) + ":"
+                ":"
+                + " ".join(unicodedata.name(i).lower().replace(" ", "_") for i in weather)
+                + ":"
                 for weather in WEATHER_EFFECTS
             ]
             final_dict = {}
@@ -408,6 +464,7 @@ class Fish(commands.Cog):
                 msg += f"# {rod.title()}\n\n"
                 for weather, fishes in data.items():
                     for fish, count in fishes.items():
+                        await asyncio.sleep(0)
                         fish_name = (
                             ":"
                             + ":".join(unicodedata.name(i).lower().replace(" ", "_") for i in fish)
