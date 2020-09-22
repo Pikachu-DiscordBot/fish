@@ -333,29 +333,27 @@ class Fish(commands.Cog):
     async def deposit_fish(
         self,
         user: discord.Member,
-        _type: Literal["legendary", "rare", "uncommon", "common", "garbage"],
+        _type: Literal["legendary", "epic", "rare", "uncommon", "common", "garbage"],
         fish: str,
     ):
         if _type == "legendary":
-            fishes = await self.config.user(user).legendary()
-            fishes[fish] += 1
-            await self.config.user(user).legendary.set(fishes)
+            async with self.config.user(user).legendary() as fishes:
+                fishes[fish] += 1
+        elif _type == "epic":
+            async with self.config.user(user).epic() as fishes:
+                fishes[fish] += 1
         elif _type == "rare":
-            fishes = await self.config.user(user).rare()
-            fishes[fish] += 1
-            await self.config.user(user).rare.set(fishes)
+            async with self.config.user(user).rare() as fishes:
+                fishes[fish] += 1
         elif _type == "uncommon":
-            fishes = await self.config.user(user).uncommon()
-            fishes[fish] += 1
-            await self.config.user(user).uncommon.set(fishes)
+            async with self.config.user(user).uncommon() as fishes:
+                fishes[fish] += 1
         elif _type == "common":
-            fishes = await self.config.user(user).common()
-            fishes[fish] += 1
-            await self.config.user(user).common.set(fishes)
+            async with self.config.user(user).common() as fishes:
+                fishes[fish] += 1
         elif _type == "garbage":
-            fishes = await self.config.user(user).garbage()
-            fishes[fish] += 1
-            await self.config.user(user).garbage.set(fishes)
+            async with self.config.user(user).garbage() as fishes:
+                fishes[fish] += 1
 
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
