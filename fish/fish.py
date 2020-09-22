@@ -1,16 +1,18 @@
 import asyncio
 import random
+import discord
+import tabulate
+
 from datetime import date
 from typing import Literal
 
-import discord
-import tabulate
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
+from redbot.core.utils import AsyncIter
 from redbot.core.utils._dpy_menus_utils import (
     SimpleHybridMenu,
 )  # WARNING: Wont work on normal current red version
-from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
+from redbot.core.utils.chat_formatting import box, humanize_number
 from redbot.core.utils.predicates import MessagePredicate
 
 from .constants import *
@@ -23,25 +25,44 @@ class Fish(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, 1398467138476, force_registration=True)
         self.config.register_user(
-            legendary={"\N{DRAGON}": 0},
+            legendary={
+                "\N{DRAGON}": 0,
+                "\N{CROWN}": 0,
+            },
             epic={
                 "\N{SHARK}": 0,
                 "\N{SPOUTING WHALE}": 0,
+                "\N{CROCODILE}": 0,
+                "\N{HIPPOPOTAMUS}": 0,
+                "\N{OYSTER}": 0,
+                "\N{RING}": 0,
             },
             rare={
                 "\N{SQUID}": 0,
                 "\N{OCTOPUS}": 0,
                 "\N{DOLPHIN}": 0,
+                "\N{FLAMINGO}": 0,
+                "\N{SWAN}": 0,
             },
             uncommon={
                 "\N{TROPICAL FISH}": 0,
                 "\N{BLOWFISH}": 0,
                 "\N{LOBSTER}": 0,
+                "\N{OTTER}": 0,
+                "\N{DUCK}": 0,
+                "\N{LIZARD}": 0,
             },
             common={
                 "\N{FISH}": 0,
                 "\N{SHRIMP}": 0,
                 "\N{CRAB}": 0,
+                "\N{SPIRAL SHELL}": 0,
+                "\N{SNAIL}": 0,
+                "\N{BUG}": 0,
+                "\N{FROG FACE}": 0,
+                "\N{DIVING MASK}": 0,
+                "\N{HANDBAG}": 0,
+                "\N{BIKINI}": 0,
             },
             garbage={
                 "\N{BATTERY}": 0,
@@ -49,6 +70,19 @@ class Fish(commands.Cog):
                 "\N{MANS SHOE}": 0,
                 "\N{WRENCH}": 0,
                 "\N{BABY BOTTLE}": 0,
+                "\N{BRIEFS}": 0,
+                "\N{BRIEFCASE}": 0,
+                "\N{BONE}": 0,
+                "\N{BILLED CAP}": 0,
+                "\N{SOCKS}": 0,
+                "\N{ICE HOCKEY STICK AND PUCK}": 0,
+                "\N{TRUMPET}": 0,
+                "\N{KITE}": 0,
+                "\N{TEDDY BEAR}": 0,
+                "\N{SPONGE}": 0,
+                "\N{OIL DRUM}\N{VARIATION SELECTOR-16}": 0,
+                "\N{MONEY BAG}": 0,
+                "\N{BICYCLE}": 0,
             },
             rod="wooden rod",
             all_rods={
@@ -110,7 +144,7 @@ class Fish(commands.Cog):
                 rods[new_rod.lower()] += 1
             return
 
-        a = date.today().strftime("%d")
+        a = date.today().day
         state = random.getstate()
         random.seed(a)
         weather = random.choice(WEATHER_EFFECTS)
@@ -165,157 +199,135 @@ class Fish(commands.Cog):
     async def fish_view(self, ctx):
         """View your collection of fishes."""
         conf = await self.config.user(ctx.author).all()
-        embed = discord.Embed(
-            title=f"{ctx.author.name}'s fishes", color=await ctx.embed_colour()
-        )
-        for fish_type in conf:
-            if fish_type not in [
-                "legendary",
-                "epic",
-                "rare",
-                "uncommon",
-                "common",
-                "garbage",
-            ]:
+        embed = discord.Embed(title=f"{ctx.author.name}'s fishes", color=await ctx.embed_colour())
+        for fish_type in ["legendary", "epic", "rare", "uncommon", "common", "garbage"]:
+            if fish_type not in conf:
                 continue
             msg = ""
             for fish in conf[fish_type]:
-                if fish in FISHES:
-                    if conf[fish_type][fish] > 0:
-                        msg += f"{fish} - {conf[fish_type][fish]}\n"
+                if fish in FISHES and conf[fish_type][fish]:
+                    msg += f"{fish} - {conf[fish_type][fish]}\n"
             if msg:
                 embed.add_field(name=fish_type.title(), value=msg)
         await ctx.send(embed=embed)
 
     @fish.command(name="sell")
-    async def fish_sell(self, ctx, *types):
-        """Sell types of fishes."""
-        fish_groups = [
-            "legendary",
-            "epic",
-            "rare",
-            "uncommon",
-            "common",
-            "garbage",
-        ]
-        if any([g.startswith("!") for g in types]) and any(
-            [(g in fish_groups) for g in types]
-        ):
-            await ctx.send("Multiple selectors are not supported.")
-            return
-        elif all([g.startswith("!") for g in types]):  # not selector
-            to_sell = set(fish_groups) - set([g[1:] for g in types])
-        elif all([(g in fish_groups) for g in types]):
-            to_sell = set(fish_groups) & set(types)
-        else:
+    async def fish_sell(self, ctx, type: str):
+        """Sell a type of fishes."""
+        type = type.lower()
+        if type not in ["legendary", "epic", "rare", "common", "uncommon", "garbage", "all"]:
             return await ctx.send(
-                f"One of those options may not exist. Valid options are {humanize_list(fish_groups)}.\nYou may also use the ! operator for advanced usage."
+                "That isn't a valid type. Valid types are legendary, rare, uncommon, common, garbage and all."
             )
-
-        await self.sell_type(ctx, to_sell)
-
-    async def sell_type(self, ctx, types):
-        msg = ""
-        for type in types:
-            if type == "legendary":
-                conf = await self.config.user(ctx.author).legendary()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += f"You claim to have legendary fish but you dont, the shop keeper fines you 150 {await bank.get_currency_name(ctx.guild)} for wasting his time.\n"
-                    if not await bank.can_spend(ctx.author, 150):
-                        await bank.set_balance(ctx.author, 0)
-                    else:
-                        await bank.withdraw_credits(ctx.author, 150)
-                else:
-                    cash = _sum * LEGENDARY_PRICE
-                    await self.config.user(ctx.author).legendary.clear()
-                    msg += await self.sell_fishes(
-                        ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum
-                    )
-            elif type == "epic":
-                conf = await self.config.user(ctx.author).epic()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += "You don't have any epic items to sell, stop wasting the shopkeepers time.\n"
-                else:
-                    cash = _sum * EPIC_PRICE
-                    await self.config.user(ctx.author).rare.clear()
-                    msg += await self.sell_fishes(ctx, "rare", cash, _sum)
-            elif type == "rare":
-                conf = await self.config.user(ctx.author).rare()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += "You don't have any rare items  to sell, stop wasting the shopkeepers time.\n"
-                else:
-                    cash = _sum * RARE_PRICE
-                    await self.config.user(ctx.author).rare.clear()
-                    msg += await self.sell_fishes(ctx, "rare", cash, _sum)
-            elif type == "uncommon":
-                conf = await self.config.user(ctx.author).uncommon()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += "You don't have any uncommon items  to sell, stop wasting the shopkeepers time.\n"
-                else:
-                    cash = _sum * UNCOMMON_PRICE
-                    await self.config.user(ctx.author).uncommon.clear()
-                    msg += await self.sell_fishes(ctx, "uncommon", cash, _sum)
-            elif type == "common":
-                conf = await self.config.user(ctx.author).common()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += "You don't have any common items  to sell, stop wasting the shopkeepers time.\n"
-                else:
-                    cash = _sum * COMMON_PRICE
-                    await self.config.user(ctx.author).common.clear()
-                    msg += await self.sell_fishes(ctx, "common", cash, _sum)
-            elif type == "garbage":
-                conf = await self.config.user(ctx.author).garbage()
-                _sum = sum(conf.values())
-                if _sum == 0:
-                    msg += "You don't have any garbage items to sell, stop wasting the shopkeepers time.\n"
-                else:
-                    cash = _sum * GARBAGE_PRICE
-                    await self.config.user(ctx.author).garbage.clear()
-                    msg += await self.sell_fishes(ctx, "garbage", cash, _sum)
-            elif type == "all":
-                conf = await self.config.user(ctx.author).all()
-                lsum, esum, rsu, usum, csum, gsum = (
-                    sum(conf["legendary"].values()),
-                    sum(conf["epic"].values()),
-                    sum(conf["rare"].values()),
-                    sum(conf["uncommon"].values()),
-                    sum(conf["common"].values()),
-                    sum(conf["garbage"].values()),
+        if type == "legendary":
+            conf = await self.config.user(ctx.author).legendary()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                await ctx.send(
+                    f"You claim to have legendary fish but you dont, the shop keeper fines you 150 {await bank.get_currency_name(ctx.guild)} for wasting his time."
                 )
-                _sum = lsum + esum + rsu + usum + csum + gsum
-                if _sum == 0:
-                    msg += "You don't have anything to sell, stop wasting the shopkeepers time.\n"
+                if not await bank.can_spend(ctx.author, 150):
+                    await bank.set_balance(ctx.author, 0)
                 else:
-                    cash = (
-                        (lsum * LEGENDARY_PRICE)
-                        + (esum * EPIC_PRICE)
-                        + (rsu * RARE_PRICE)
-                        + (usum * UNCOMMON_PRICE)
-                        + (csum * COMMON_PRICE)
-                        + (gsum * GARBAGE_PRICE)
-                    )
-                    await self.config.user(ctx.author).garbage.clear()
-                    await self.config.user(ctx.author).common.clear()
-                    await self.config.user(ctx.author).uncommon.clear()
-                    await self.config.user(ctx.author).rare.clear()
-                    await self.config.user(ctx.author).epic.clear()
-                    await self.config.user(ctx.author).legendary.clear()
-                    msg += await self.sell_fishes(ctx, "all", cash, _sum)
-        if msg:
-            await ctx.send(msg)
+                    await bank.withdraw_credits(ctx.author, 150)
+                return
+            cash = _sum * LEGENDARY_PRICE
+            await self.config.user(ctx.author).legendary.clear()
+            await self.sell_fishes(
+                ctx, "legendary" if _sum == 1 else "legendaries", cash, _sum
+            )
+        elif type == "epic":
+            conf = await self.config.user(ctx.author).epic()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * EPIC_PRICE
+            await self.config.user(ctx.author).rare.clear()
+            await self.sell_fishes(ctx, "rare", cash, _sum)
+        elif type == "rare":
+            conf = await self.config.user(ctx.author).rare()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * RARE_PRICE
+            await self.config.user(ctx.author).rare.clear()
+            await self.sell_fishes(ctx, "rare", cash, _sum)
+        elif type == "uncommon":
+            conf = await self.config.user(ctx.author).uncommon()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * UNCOMMON_PRICE
+            await self.config.user(ctx.author).uncommon.clear()
+            await self.sell_fishes(ctx, "uncommon", cash, _sum)
+        elif type == "common":
+            conf = await self.config.user(ctx.author).common()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * COMMON_PRICE
+            await self.config.user(ctx.author).common.clear()
+            await self.sell_fishes(ctx, "common", cash, _sum)
+        elif type == "garbage":
+            conf = await self.config.user(ctx.author).garbage()
+            _sum = sum(conf.values())
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = _sum * GARBAGE_PRICE
+            await self.config.user(ctx.author).garbage.clear()
+            await self.sell_fishes(ctx, "garbage", cash, _sum)
+        elif type == "all":
+            conf = await self.config.user(ctx.author).all()
+            lsum, esum, rsu, usum, csum, gsum = (
+                sum(conf["legendary"].values()),
+                sum(conf["epic"].values()),
+                sum(conf["rare"].values()),
+                sum(conf["uncommon"].values()),
+                sum(conf["common"].values()),
+                sum(conf["garbage"].values()),
+            )
+            _sum = lsum + esum + rsu + usum + csum + gsum
+            if _sum == 0:
+                return await ctx.send(
+                    "You don't have anything to sell, stop wasting the shopkeepers time."
+                )
+            cash = (
+                (lsum * LEGENDARY_PRICE)
+                + (esum * EPIC_PRICE)
+                + (rsu * RARE_PRICE)
+                + (usum * UNCOMMON_PRICE)
+                + (csum * COMMON_PRICE)
+                + (gsum * GARBAGE_PRICE)
+            )
+            await self.config.user(ctx.author).garbage.clear()
+            await self.config.user(ctx.author).common.clear()
+            await self.config.user(ctx.author).uncommon.clear()
+            await self.config.user(ctx.author).rare.clear()
+            await self.config.user(ctx.author).epic.clear()
+            await self.config.user(ctx.author).legendary.clear()
+            await self.sell_fishes(ctx, "all", cash, _sum)
 
     async def sell_fishes(self, ctx, type, amount, sum):
         try:
             await bank.deposit_credits(ctx.author, amount)
-            return f"You've sold {sum}{'' if type == 'all' else f' {type}'} {'fish' if type not in ['garbage', 'all'] else 'item' if sum == 1 else 'items'} for {humanize_number(amount)} {await bank.get_currency_name(ctx.guild)}."
+            await ctx.send(
+                f"You've sold {sum}{'' if type == 'all' else f' {type}'} {'fish' if type not in ['garbage', 'all'] else 'item' if sum == 1 else 'items'} for {humanize_number(amount)} {await bank.get_currency_name(ctx.guild)}."
+            )
         except BalanceTooHigh as e:
             await bank.set_balance(ctx.author, e.max_balance)
-            return f"You've sold {sum}{'' if type == 'all' else f' {type}'} {'fish' if type not in ['garbage', 'all']  else 'item' if sum == 1 else 'items'} however you have reached the max balance so you must spend some more."
+            await ctx.send(
+                f"You've sold {sum}{'' if type == 'all' else f' {type}'} {'fish' if type not in ['garbage', 'all']  else 'item' if sum == 1 else 'items'} however you have reached the max balance so you must spend some more."
+            )
 
     async def deposit_fish(
         self,
@@ -417,8 +429,3 @@ class Fish(commands.Cog):
         async with self.config.user(ctx.author).all_rods() as rods:
             rods[item.lower()] += 1
         await ctx.send(f"Congratulations on your new purchase of a {item.title()}!")
-
-    # @fishshop.command(name="sell")
-    # async def fish_sell(self, ctx, *, item):
-    #     """Sell your unused fishing goods"""
-    #     pass

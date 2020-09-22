@@ -3,20 +3,51 @@ FISHES_TYPE = {
     "\N{SHOPPING TROLLEY}": "garbage",
     "\N{MANS SHOE}": "garbage",
     "\N{WRENCH}": "garbage",
+    "\N{BONE}": "garbage",
+    "\N{BILLED CAP}": "garbage",
+    "\N{BRIEFS}": "garbage",
+    "\N{SOCKS}": "garbage",
+    "\N{ICE HOCKEY STICK AND PUCK}": "garbage",
+    "\N{TRUMPET}": "garbage",
+    "\N{KITE}": "garbage",
+    "\N{BICYCLE}": "garbage",
+    "\N{MONEY BAG}": "garbage",
+    "\N{TEDDY BEAR}": "garbage",
+    "\N{SPONGE}": "garbage",
+    "\N{OIL DRUM}\N{VARIATION SELECTOR-16}": "garbage",
+    "\N{BRIEFCASE}": "garbage",
     "\N{BABY BOTTLE}": "garbage",
     "\N{FISH}": "common",
     "\N{SHRIMP}": "common",
     "\N{CRAB}": "common",
+    "\N{DIVING MASK}": "common",
+    "\N{HANDBAG}": "common",
+    "\N{SPIRAL SHELL}": "common",
+    "\N{SNAIL}": "common",
+    "\N{BUG}": "common",
+    "\N{FROG FACE}": "common",
+    "\N{BIKINI}": "common",
     "\N{TROPICAL FISH}": "uncommon",
     "\N{BLOWFISH}": "uncommon",
+    "\N{OTTER}": "uncommon",
+    "\N{DUCK}": "uncommon",
+    "\N{LIZARD}": "uncommon",
     "\N{LOBSTER}": "uncommon",
     "\N{SQUID}": "rare",
     "\N{OCTOPUS}": "rare",
+    "\N{FLAMINGO}": "rare",
+    "\N{SWAN}": "rare",
     "\N{DOLPHIN}": "rare",
     "\N{SHARK}": "epic",
     "\N{SPOUTING WHALE}": "epic",
+    "\N{CROCODILE}": "epic",
+    "\N{RING}": "epic",
+    "\N{HIPPOPOTAMUS}": "epic",
+    "\N{OYSTER}": "epic",
+    "\N{CROWN}": "legendary",
     "\N{DRAGON}": "legendary",
 }
+
 WEEKEND_BONUS = {
     "legendary": 1.4,
     "epic": 1.5,
@@ -25,6 +56,7 @@ WEEKEND_BONUS = {
     "common": 3,
     "garbage": 1.5,
 }
+
 WEATHER = {
     "\N{BLACK SUN WITH RAYS}\N{VARIATION SELECTOR-16}": {
         "legendary": 0.001,
@@ -131,6 +163,7 @@ WEATHER = {
         "garbage": 0.35,
     },
 }
+
 WEIGHT_RATES = {
     "wooden rod": {
         "legendary": 0.001,
@@ -253,11 +286,11 @@ RODS_SELL_PRICES = {
 }
 
 WEIGHTS = lambda x: {
-    k: [v[j] * WEATHER[x][j] for i, j in FISHES_TYPE.items()]
+    k: [v[j] + WEATHER[x][j] for i, j in FISHES_TYPE.items()]
     for k, v in WEIGHT_RATES.items()
 }
 WEIGHTS_WEEKEND = lambda x: {
-    k: [v[j] * WEATHER[x][j] * WEEKEND_BONUS[j] for i, j in FISHES_TYPE.items()]
+    k: [v[j] + WEATHER[x][j] + WEEKEND_BONUS[j] for i, j in FISHES_TYPE.items()]
     for k, v in WEIGHT_RATES.items()
 }
 
