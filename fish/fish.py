@@ -392,8 +392,7 @@ class Fish(commands.Cog):
             delete_message_after=True,
         ).start(ctx=ctx, wait=False)
 
-    @fish.command()
-    @commands.bot_has_permissions(embed_links=True)
+    @fish.command(aliases=["forecast"])
     async def weather(self, ctx):
         """
         Shows the weather forecast for the next few days
