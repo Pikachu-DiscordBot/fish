@@ -184,7 +184,7 @@ class Fish(commands.Cog):
     async def fish_sell(self, ctx, type: str):
         """Sell a type of fishes."""
         type = type.lower()
-        if type not in ["legendary", "rare", "common", "uncommon", "garbage", "all"]:
+        if type not in ["legendary", "epic", "rare", "common", "uncommon", "garbage", "all"]:
             return await ctx.send(
                 "That isn't a valid type. Valid types are legendary, rare, uncommon, common, garbage and all."
             )
