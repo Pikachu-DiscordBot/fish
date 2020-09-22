@@ -305,7 +305,7 @@ EVENTS = [
     "Your line snaps while you cast out and pay {amount} {currency} for a new spool.",
     "Your hook is blunt and you pay {amount} {currency} for a new set from the shop.",
 ]
-LIGHTNING_EVENTS = [
+STORM_EVENTS = [
     "A bolt of \N{HIGH VOLTAGE SIGN}\N{VARIATION SELECTOR-16} comes out of nowhere and nearly zaps you. You spend {amount} {currency} to buy new pants.",
 ]
 
