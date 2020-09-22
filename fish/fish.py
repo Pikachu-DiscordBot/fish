@@ -189,7 +189,7 @@ class Fish(commands.Cog):
 
     @fish.command(name="sell")
     async def fish_sell(self, ctx, *types):
-        """Sell a type of fishes."""
+        """Sell types of fishes."""
         fish_groups = [
             "legendary",
             "epic",
