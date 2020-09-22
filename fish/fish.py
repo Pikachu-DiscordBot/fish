@@ -169,7 +169,14 @@ class Fish(commands.Cog):
             title=f"{ctx.author.name}'s fishes", color=await ctx.embed_colour()
         )
         for fish_type in conf:
-            if fish_type not in ["legendary", "epic", "rare", "uncommon", "common", "garbage"]:
+            if fish_type not in [
+                "legendary",
+                "epic",
+                "rare",
+                "uncommon",
+                "common",
+                "garbage",
+            ]:
                 continue
             msg = ""
             for fish in conf[fish_type]:
@@ -184,7 +191,15 @@ class Fish(commands.Cog):
     async def fish_sell(self, ctx, type: str):
         """Sell a type of fishes."""
         type = type.lower()
-        if type not in ["legendary", "epic", "rare", "common", "uncommon", "garbage", "all"]:
+        if type not in [
+            "legendary",
+            "epic",
+            "rare",
+            "common",
+            "uncommon",
+            "garbage",
+            "all",
+        ]:
             return await ctx.send(
                 "That isn't a valid type. Valid types are legendary, rare, uncommon, common, garbage and all."
             )
@@ -328,7 +343,7 @@ class Fish(commands.Cog):
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
         """Fish Leaderboard"""
-        data = await get_leaderboard(ctx.guild if not global_users else None)
+        data = await get_leaderboard(self, ctx.guild if not global_users else None)
         await SimpleHybridMenu(
             source=LeaderboardSource(data),
             cog=self,

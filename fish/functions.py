@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import List
-import discord
+
 from redbot.core.utils import AsyncIter
+
 
 def check_weekend():
     return True if datetime.today().weekday() in [4, 5, 6] else False
 
-async def get_leaderboard(self, guild: discord.Guild = None) -> List[tuple]:
-    raw_accounts = await self.config.all_users()
+
+async def get_leaderboard(cog, guild) -> List[tuple]:
+    raw_accounts = await cog.config.all_users()
     if guild is not None:
         tmp = raw_accounts.copy()
         for acc in tmp:
