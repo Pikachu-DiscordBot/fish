@@ -1,6 +1,8 @@
 import asyncio
 import random
+import unicodedata
 from datetime import datetime, timedelta
+from io import BytesIO
 from typing import Literal
 
 import discord
@@ -23,6 +25,12 @@ class Fish(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, 1398467138476, force_registration=True)
         self.config.register_user(
+            chests={
+                "\N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+                "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+                "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+            },
+            key_amount=0,
             legendary={"\N{DRAGON}": 0},
             epic={
                 "\N{SHARK}": 0,
@@ -125,7 +133,7 @@ class Fish(commands.Cog):
         msg = await ctx.send(
             f"{ctx.author.display_name} pays 10 {await bank.get_currency_name(guild=ctx.guild)} to cast out their line on their {rod.title()} on a {weather} day.\n{ROD} **|** You caught a {fish}"
         )
-        fish_type = FISHES_TYPE[fish]
+        fish_type = FISHES_TYPE[fish] if fish not in CHESTS else "chests"
         await self.deposit_fish(ctx.author, fish_type, fish)
 
     @fish.command(name="rods")
@@ -177,6 +185,7 @@ class Fish(commands.Cog):
                 "uncommon",
                 "common",
                 "garbage",
+                "chests",
             ]:
                 continue
             msg = ""
@@ -240,8 +249,8 @@ class Fish(commands.Cog):
                     msg += "You don't have any epic items to sell, stop wasting the shopkeepers time.\n"
                 else:
                     cash = _sum * EPIC_PRICE
-                    await self.config.user(ctx.author).rare.clear()
-                    msg += await self.sell_fishes(ctx, "rare", cash, _sum)
+                    await self.config.user(ctx.author).epic.clear()
+                    msg += await self.sell_fishes(ctx, "epic", cash, _sum)
             elif type == "rare":
                 conf = await self.config.user(ctx.author).rare()
                 _sum = sum(conf.values())
@@ -321,7 +330,9 @@ class Fish(commands.Cog):
     async def deposit_fish(
         self,
         user: discord.Member,
-        _type: Literal["legendary", "epic", "rare", "uncommon", "common", "garbage"],
+        _type: Literal[
+            "legendary", "epic", "rare", "uncommon", "common", "garbage", "chests"
+        ],
         fish: str,
     ):
         if _type == "legendary":
@@ -342,6 +353,9 @@ class Fish(commands.Cog):
         elif _type == "garbage":
             async with self.config.user(user).garbage() as fishes:
                 fishes[fish] += 1
+        elif _type == "chests":
+            async with self.config.user(user).chests() as fishes:
+                fishes[fish] += 1
 
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
@@ -353,9 +367,38 @@ class Fish(commands.Cog):
             delete_message_after=True,
         ).start(ctx=ctx, wait=False)
 
+    # @fish.command()
+    # @commands.max_concurrency(1, commands.BucketType.user)
+    # async def chest_open(self, ctx, *, type: str):
+    #     """Unlock one of your packages.capitalize
+
+    #     Valid types are legendary, locked and normal."""
+    #     if type.lower() not in ["legendary", "locked", "normal"]:
+    #         await ctx.send(
+    #             "You must provide one of the following: `normal`, `locked` or `legendary`."
+    #         )
+    #         return
+    #     types = {
+    #         "legendary": "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+    #         "locked": "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+    #         "normal": "\N{PACKAGE}\N{VARIATION SELECTOR-16}",
+    #     }
+    #     chest_type = types[type]
+    #     msg = ""
+    #     async with self.config.user(ctx.author).chests() as chests:
+    #         if chests[chest_type] < 1:
+    #             return await ctx.send("You don't have any of them chests silly.")
+    #         # chests[chest_type] -= 1
+    #         if type in ["legendary", "locked"]:
+    #             keys = await self.config.user(ctx.author).key_amount()
+    #             if keys < 1:
+    #                 return await ctx.send("You don't have any keys to unlock this chest.")
+    #             msg += "You take one of your rust keys from your fishing bag and unlock the box."
+    #             # await self.config.user(ctx.author).keys_amount.set(keys -= 1)
+
     @commands.is_owner()
     @commands.command()
-    async def fishsim(self, ctx, amount: int, rod):
+    async def fishsim(self, ctx, amount: int, *, rod):
         """."""
         msg = ""
         a = {k: 0 for k in FISHES}
@@ -368,6 +411,60 @@ class Fish(commands.Cog):
                 a[fish] = round(a[fish] / amount * 100, 3)
             msg = f"{rod} - {weather} - {a}"
             await ctx.send(msg)
+
+    @commands.is_owner()
+    @commands.command()
+    async def fishsime(self, ctx, amount: int):
+        """
+        Generate a json file of number of catches
+        """
+        async with ctx.typing():
+            msg = ""
+            we_str = [
+                ":"
+                + " ".join(
+                    unicodedata.name(i).lower().replace(" ", "_") for i in weather
+                )
+                + ":"
+                for weather in WEATHER_EFFECTS
+            ]
+            final_dict = {}
+            for rod in RODS:
+                final_dict[rod] = {}
+                for weather in WEATHER_EFFECTS:
+                    a = {k: 0 for k in FISHES}
+                    weights = WEIGHTS(weather)
+                    for _ in range(amount):
+                        fish = random.choices(FISHES, weights=weights[rod], k=1)[0]
+                        a[fish] += 1
+                    final_dict[rod][weather] = a
+            for rod, data in final_dict.items():
+                tab_list = []
+                msg += f"# {rod.title()}\n\n"
+                for weather, fishes in data.items():
+                    for fish, count in fishes.items():
+                        await asyncio.sleep(0)
+                        fish_name = (
+                            ":"
+                            + ":".join(
+                                unicodedata.name(i).lower().replace(" ", "_")
+                                for i in fish
+                            )
+                            + ":"
+                        )
+                        if fish_name not in [i[0] for i in tab_list]:
+                            tab_list.append([fish_name, count])
+                        else:
+                            for i in tab_list:
+                                if fish_name == i[0]:
+                                    i.append(count)
+                msg += (
+                    tabulate.tabulate(tab_list, headers=we_str, tablefmt="github")
+                    + "\n\n"
+                )
+            data = BytesIO(msg.encode("utf8"))
+            file = discord.File(data, filename="fishsim.md")
+            await ctx.send(files=[file])
 
     @fish.command(aliases=["forecast"])
     async def weather(self, ctx):
