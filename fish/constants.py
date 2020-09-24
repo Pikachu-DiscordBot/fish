@@ -19,7 +19,7 @@ FISHES_TYPE = {
     "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": "epic",
     "\N{DRAGON}": "legendary",
     "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": "legendary",
-    "\N{KEY}": "key",
+    "\N{keys}": "keys",
 }
 
 CHESTS = [
@@ -29,7 +29,7 @@ CHESTS = [
 ]
 
 WEEKEND_BONUS = {
-    "key": 0.0,
+    "keys": 0.0,
     "legendary": 1.4,
     "epic": 1.5,
     "rare": 1.6,
@@ -39,7 +39,7 @@ WEEKEND_BONUS = {
 }
 WEATHER = {
     "\N{BLACK SUN WITH RAYS}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": -0.2,
         "epic": -0.005,
         "rare": 0.0,
@@ -48,7 +48,7 @@ WEATHER = {
         "garbage": 0.2,
     },
     "\N{WHITE SUN WITH SMALL CLOUD}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": -0.0005,
         "epic": 0.0,
         "rare": 0.0,
@@ -57,7 +57,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{SUN BEHIND CLOUD}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.0,
         "epic": 0.0,
         "rare": 0.0,
@@ -66,7 +66,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{WHITE SUN BEHIND CLOUD}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.0,
         "epic": 0.0,
         "rare": 0.0,
@@ -75,7 +75,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{CLOUD}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.005,
         "epic": 0.0,
         "rare": 0.2,
@@ -84,7 +84,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{WHITE SUN BEHIND CLOUD WITH RAIN}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.0,
         "epic": 0.05,
         "rare": 0.08,
@@ -93,7 +93,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{CLOUD WITH RAIN}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.007,
         "epic": 0.01,
         "rare": 0.0,
@@ -102,7 +102,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{THUNDER CLOUD AND RAIN}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.005,
         "epic": 0.02,
         "rare": 0.0,
@@ -111,7 +111,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{CLOUD WITH LIGHTNING}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.009,
         "epic": 0.02,
         "rare": 0.0,
@@ -120,7 +120,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{CLOUD WITH SNOW}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.0,
         "epic": 0.0,
         "rare": 0.1,
@@ -129,7 +129,7 @@ WEATHER = {
         "garbage": 0.2,
     },
     "\N{SNOWFLAKE}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": -0.1,
         "epic": -0.1,
         "rare": -0.1,
@@ -138,7 +138,7 @@ WEATHER = {
         "garbage": 0.2,
     },
     "\N{FOG}\N{VARIATION SELECTOR-16}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.009,
         "epic": 0.0,
         "rare": 0.0,
@@ -147,7 +147,7 @@ WEATHER = {
         "garbage": 0.0,
     },
     "\N{DASH SYMBOL}": {
-        "key": 0.0,
+        "keys": 0.0,
         "legendary": 0.0,
         "epic": 0.0,
         "rare": 0.0,
@@ -158,7 +158,7 @@ WEATHER = {
 }
 WEIGHT_RATES = {
     "wooden rod": {
-        "key": 0.008077544426494344,
+        "keys": 0.008077544426494344,
         "legendary": 0.0016155088852988688,
         "epic": 0.0016155088852988688,
         "rare": 0.0032310177705977376,
@@ -167,7 +167,7 @@ WEIGHT_RATES = {
         "garbage": 0.5654281098546041,
     },
     "magnet rod": {
-        "key": 0.040273862263391066,
+        "keys": 0.040273862263391066,
         "legendary": 0.00040273862263391066,
         "epic": 0.0008054772452678213,
         "rare": 0.03221908981071285,
@@ -176,7 +176,7 @@ WEIGHT_RATES = {
         "garbage": 0.5235602094240839,
     },
     "fly-fishing rod": {
-        "key": 0.007479431563201197,
+        "keys": 0.007479431563201197,
         "legendary": 0.0007479431563201197,
         "epic": 0.0014958863126402393,
         "rare": 0.0029917726252804786,
@@ -185,7 +185,7 @@ WEIGHT_RATES = {
         "garbage": 0.5235602094240838,
     },
     "spinning rod": {
-        "key": 0.007057163020465773,
+        "keys": 0.007057163020465773,
         "legendary": 0.0007057163020465773,
         "epic": 0.0014114326040931546,
         "rare": 0.0028228652081863093,
@@ -194,7 +194,7 @@ WEIGHT_RATES = {
         "garbage": 0.49400141143260407,
     },
     "harpoon": {
-        "key": 0.007552870090634442,
+        "keys": 0.007552870090634442,
         "legendary": 0.0015105740181268884,
         "epic": 0.003021148036253777,
         "rare": 0.006042296072507554,
@@ -203,7 +203,7 @@ WEIGHT_RATES = {
         "garbage": 0.5287009063444109,
     },
     "telescopic rod": {
-        "key": 0.005027652086475615,
+        "keys": 0.005027652086475615,
         "legendary": 0.0005027652086475615,
         "epic": 0.002011060834590246,
         "rare": 0.007038712921065862,
@@ -212,7 +212,7 @@ WEIGHT_RATES = {
         "garbage": 0.3519356460532931,
     },
     "carbon-fibre rod": {
-        "key": 0.0064226075786769435,
+        "keys": 0.0064226075786769435,
         "legendary": 0.0006422607578676943,
         "epic": 0.0012845215157353887,
         "rare": 0.0025690430314707774,
@@ -221,7 +221,7 @@ WEIGHT_RATES = {
         "garbage": 0.449582530507386,
     },
     "metal rod": {
-        "key": 0.00702247191011236,
+        "keys": 0.00702247191011236,
         "legendary": 0.001404494382022472,
         "epic": 0.002808988764044944,
         "rare": 0.005617977528089888,
@@ -230,7 +230,7 @@ WEIGHT_RATES = {
         "garbage": 0.49157303370786515,
     },
     "trusty rod": {
-        "key": 0.02244668911335578,
+        "keys": 0.02244668911335578,
         "legendary": 0.005611672278338945,
         "epic": 0.006734006734006734,
         "rare": 0.01122334455667789,
@@ -239,7 +239,7 @@ WEIGHT_RATES = {
         "garbage": 0.39281705948372614,
     },
     "pikachu rod": {
-        "key": 0.08823529411764705,
+        "keys": 0.08823529411764705,
         "legendary": 0.014705882352941176,
         "epic": 0.029411764705882353,
         "rare": 0.058823529411764705,

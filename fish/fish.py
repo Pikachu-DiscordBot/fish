@@ -30,7 +30,7 @@ class Fish(commands.Cog):
                 "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
                 "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
             },
-            key_amount=0,
+            keys={"\N{KEY}": 0},
             legendary={"\N{DRAGON}": 0},
             epic={
                 "\N{SHARK}": 0,
@@ -186,6 +186,7 @@ class Fish(commands.Cog):
                 "common",
                 "garbage",
                 "chests",
+                "keys",
             ]:
                 continue
             msg = ""
@@ -331,31 +332,19 @@ class Fish(commands.Cog):
         self,
         user: discord.Member,
         _type: Literal[
-            "legendary", "epic", "rare", "uncommon", "common", "garbage", "chests"
+            "legendary",
+            "epic",
+            "rare",
+            "uncommon",
+            "common",
+            "garbage",
+            "chests",
+            "keys",
         ],
         fish: str,
     ):
-        if _type == "legendary":
-            async with self.config.user(user).legendary() as fishes:
-                fishes[fish] += 1
-        elif _type == "epic":
-            async with self.config.user(user).epic() as fishes:
-                fishes[fish] += 1
-        elif _type == "rare":
-            async with self.config.user(user).rare() as fishes:
-                fishes[fish] += 1
-        elif _type == "uncommon":
-            async with self.config.user(user).uncommon() as fishes:
-                fishes[fish] += 1
-        elif _type == "common":
-            async with self.config.user(user).common() as fishes:
-                fishes[fish] += 1
-        elif _type == "garbage":
-            async with self.config.user(user).garbage() as fishes:
-                fishes[fish] += 1
-        elif _type == "chests":
-            async with self.config.user(user).chests() as fishes:
-                fishes[fish] += 1
+        val = await self.config.user(user).get_raw(_type, fish)
+        await self.config.user(user).set_raw(_type, fish, value=val + 1)
 
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
