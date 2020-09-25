@@ -209,12 +209,19 @@ class Fish(commands.Cog):
             "common",
             "garbage",
         ]
+        if not types:
+            await ctx.send(
+                f"You must provide an option. Valid options are {humanize_list(fish_groups)}.\nYou may also use the ! operator for advanced usage."
+            )
+            return
         if any([g.startswith("!") for g in types]) and any(
             [(g in fish_groups) for g in types]
         ):
             await ctx.send("Multiple selectors are not supported.")
             return
-        elif all([g.startswith("!") for g in types]):  # not selector
+        elif all([g.startswith("!") for g in types]) and all(
+            [(g[1:] in fish_groups) for g in types]
+        ):  # not selector
             to_sell = set(fish_groups) - set([g[1:] for g in types])
         elif all([(g in fish_groups) for g in types]):
             to_sell = set(fish_groups) & set(types)
@@ -356,39 +363,63 @@ class Fish(commands.Cog):
             delete_message_after=True,
         ).start(ctx=ctx, wait=False)
 
-    # @fish.command()
-    # @commands.max_concurrency(1, commands.BucketType.user)
-    # async def chest_open(self, ctx, *, type: str):
-    #     """Unlock one of your packages.capitalize
+    @fish.command(name="chest")
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def chest_open(self, ctx, *, type: str):
+        """Unlock one of your packages.capitalize
 
-    #     Valid types are legendary, locked and normal."""
-    #     if type.lower() not in ["legendary", "locked", "normal"]:
-    #         await ctx.send(
-    #             "You must provide one of the following: `normal`, `locked` or `legendary`."
-    #         )
-    #         return
-    #     types = {
-    #         "legendary": "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
-    #         "locked": "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
-    #         "normal": "\N{PACKAGE}\N{VARIATION SELECTOR-16}",
-    #     }
-    #     chest_type = types[type]
-    #     msg = ""
-    #     async with self.config.user(ctx.author).chests() as chests:
-    #         if chests[chest_type] < 1:
-    #             return await ctx.send("You don't have any of them chests silly.")
-    #         # chests[chest_type] -= 1
-    #         if type in ["legendary", "locked"]:
-    #             keys = await self.config.user(ctx.author).key_amount()
-    #             if keys < 1:
-    #                 return await ctx.send("You don't have any keys to unlock this chest.")
-    #             msg += "You take one of your rust keys from your fishing bag and unlock the box."
-    #             # await self.config.user(ctx.author).keys_amount.set(keys -= 1)
+        Valid types are legendary, locked and normal."""
+        if type.lower() not in ["legendary", "locked", "normal"]:
+            await ctx.send(
+                "You must provide one of the following: `normal`, `locked` or `legendary`."
+            )
+            return
+        types = {
+            "legendary": "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+            "locked": "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+            "normal": "\N{PACKAGE}\N{VARIATION SELECTOR-16}",
+        }
+        chest_type = types[type]
+        msg = ""
+        async with self.config.user(ctx.author).chests() as chests:
+            if chests[chest_type] < 1:
+                return await ctx.send("You don't have any of them chests silly.")
+            chests[chest_type] -= 1
+            if type in ["legendary", "locked"]:
+                keys = await self.config.user(ctx.author).get_raw("keys", "\N{KEY}")
+                if keys < 1:
+                    return await ctx.send(
+                        "You don't have any keys to unlock this chest."
+                    )
+                msg += "You take one of your rusty keys from your fishing bag and unlock the chest."
+                await self.config.user(ctx.author).set_raw("keys", "\N{KEY}", value=keys - 1)
+            else:
+                msg += "You open the chest."
+        reward = random.choices(
+            list(CHEST_REWARDS[chest_type].keys()),
+            list(CHEST_REWARDS[chest_type].values()),
+            k=1,
+        )[0]
+        if reward == "cash":
+            amount = random.randint(
+                CASH_REWARDS[chest_type][0], CASH_REWARDS[chest_type][1]
+            )
+            try:
+                await bank.deposit_credits(ctx.author, amount)
+                msg += f"\nYou find {amount} {await bank.get_currency_name(ctx.guild)} inside the chest."
+            except BalanceTooHigh as e:
+                await bank.set_balance(ctx.author, e.max_balance)
+                msg += f"\nYou find {amount} {await bank.get_currency_name(ctx.guild)} inside the chest. Your bank has reached max capacity."
+        else:
+            msg += f"\nYou find a {reward.title()} insde the chest!"
+            async with self.config.user(ctx.author).all_rods() as rods:
+                rods[reward.lower()] += 1
+        await ctx.maybe_send_embed(msg)
 
     @commands.is_owner()
     @commands.command()
     async def fishsim(self, ctx, amount: int, *, rod):
-        """."""
+        """Send fish odds."""
         msg = ""
         a = {k: 0 for k in FISHES}
         for weather in WEATHER_EFFECTS:

@@ -19,7 +19,7 @@ FISHES_TYPE = {
     "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": "epic",
     "\N{DRAGON}": "legendary",
     "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": "legendary",
-    "\N{keys}": "keys",
+    "\N{KEY}": "keys",
 }
 
 CHESTS = [
@@ -283,6 +283,54 @@ RODS_PRICES = {
     "metal rod": 1000000,
     "trusty rod": 5000000,
     "pikachu rod": 15000000,
+}
+
+CHEST_REWARDS = {
+    "\N{PACKAGE}\N{VARIATION SELECTOR-16}": {
+        "wooden rod": 0.4513004504542621,
+        "magnet rod": 0.06208765947124511,
+        "fly-fishing rod": 0.06208765947124511,
+        "spinning rod": 0.03443704499747553,
+        "harpoon": 0.022590408173051156,
+        "telescopic rod": 0.022590408173051156,
+        "carbon-fibre rod": 0.002820627815339138,
+        "metal rod": 0.0016923766892034827,
+        "trusty rod": 0.0011282511261356551,
+        "pikachu rod": 0.0002820627815339138,
+        "cash": 0.3389830508474576,
+    },
+    "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": {
+        "wooden rod": 0.2518313287146192,
+        "magnet rod": 0.10597030048863999,
+        "fly-fishing rod": 0.10597030048863999,
+        "spinning rod": 0.07044774102937536,
+        "harpoon": 0.055460361582501914,
+        "telescopic rod": 0.055460361582501914,
+        "carbon-fibre rod": 0.03277890615823507,
+        "metal rod": 0.015123490864655344,
+        "trusty rod": 0.0030277228711039997,
+        "pikachu rod": 0.0010059642006806577,
+        "cash": 0.30292352201904654,
+    },
+    "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": {
+        "wooden rod": 0.04227252050883879,
+        "magnet rod": 0.05707396300780143,
+        "fly-fishing rod": 0.06659460826323564,
+        "spinning rod": 0.12354736485365633,
+        "harpoon": 0.133217735683502,
+        "telescopic rod": 0.1141764451726336,
+        "carbon-fibre rod": 0.08326999703876087,
+        "metal rod": 0.057102482164832186,
+        "trusty rod": 0.026656380757364245,
+        "pikachu rod": 0.010469144886348784,
+        "cash": 0.28561935766302626,
+    },
+}
+
+CASH_REWARDS = {
+    "\N{PACKAGE}\N{VARIATION SELECTOR-16}": [1, 254],
+    "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": [300, 1640],
+    "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": [5000, 13540],
 }
 
 RODS_SELL_PRICES = {
