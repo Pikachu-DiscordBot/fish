@@ -366,7 +366,7 @@ class Fish(commands.Cog):
     @fish.command(name="chest")
     @commands.max_concurrency(1, commands.BucketType.user)
     async def chest_open(self, ctx, *, type: str):
-        """Unlock one of your packages.capitalize
+        """Unlock one of your packages
 
         Valid types are legendary, locked and normal."""
         if type.lower() not in ["legendary", "locked", "normal"]:
@@ -411,7 +411,7 @@ class Fish(commands.Cog):
                 await bank.set_balance(ctx.author, e.max_balance)
                 msg += f"\nYou find {amount} {await bank.get_currency_name(ctx.guild)} inside the chest. Your bank has reached max capacity."
         else:
-            msg += f"\nYou find a {reward.title()} insde the chest!"
+            msg += f"\nYou find a {reward.title()} inside the chest!"
             async with self.config.user(ctx.author).all_rods() as rods:
                 rods[reward.lower()] += 1
         await ctx.maybe_send_embed(msg)
