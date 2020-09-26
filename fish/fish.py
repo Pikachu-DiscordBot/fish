@@ -38,6 +38,9 @@ from .constants import (
     UNCOMMON_PRICE,
     COMMON_PRICE,
     GARBAGE_PRICE,
+    CHEST_REWARDS,
+    CASH_REWARDS,
+
 )
 from .functions import check_weekend, get_leaderboard
 from .menus import LeaderboardSource
@@ -48,6 +51,12 @@ class Fish(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, 1398467138476, force_registration=True)
         self.config.register_user(
+            chests={
+                "\N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+                "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+                "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}": 0,
+            },
+            keys={"\N{KEY}": 0},
             legendary={
                 "\N{DRAGON}": 0,
                 "\N{CROWN}": 0,
@@ -230,7 +239,7 @@ class Fish(commands.Cog):
         """View your collection of fishes."""
         conf = await self.config.user(ctx.author).all()
         embed = discord.Embed(title=f"{ctx.author.name}'s fishes", color=await ctx.embed_colour())
-        for fish_type in ["legendary", "epic", "rare", "uncommon", "common", "garbage"]:
+        for fish_type in ["legendary", "epic", "rare", "uncommon", "common", "garbage", "chests","keys"]:
             if fish_type not in conf:
                 continue
             msg = ""
@@ -332,24 +341,8 @@ class Fish(commands.Cog):
         _type: Literal["legendary", "epic", "rare", "uncommon", "common", "garbage"],
         fish: str,
     ):
-        if _type == "legendary":
-            async with self.config.user(user).legendary() as fishes:
-                fishes[fish] += 1
-        elif _type == "epic":
-            async with self.config.user(user).epic() as fishes:
-                fishes[fish] += 1
-        elif _type == "rare":
-            async with self.config.user(user).rare() as fishes:
-                fishes[fish] += 1
-        elif _type == "uncommon":
-            async with self.config.user(user).uncommon() as fishes:
-                fishes[fish] += 1
-        elif _type == "common":
-            async with self.config.user(user).common() as fishes:
-                fishes[fish] += 1
-        elif _type == "garbage":
-            async with self.config.user(user).garbage() as fishes:
-                fishes[fish] += 1
+        val = await self.config.user(user).get_raw(_type, fish)
+        await self.config.user(user).set_raw(_type, fish, value=val + 1)
 
     @fish.command(name="leaderboard", aliases=["lb"])
     async def fish_leaderboard(self, ctx, global_users=False):
@@ -390,6 +383,58 @@ class Fish(commands.Cog):
             await ctx.send(embed=em)
         else:
             await ctx.send(f"7 Day Weather Forecast\n{msg}")
+
+    @fish.command(name="chest")
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def chest_open(self, ctx, *, type: str):
+        """Unlock one of your packages
+        Valid types are legendary, locked and normal."""
+        if type.lower() not in ["legendary", "locked", "normal"]:
+            await ctx.send(
+                "You must provide one of the following: `normal`, `locked` or `legendary`."
+            )
+            return
+        types = {
+            "legendary": "Legendary Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+            "locked": "Locked \N{PACKAGE}\N{VARIATION SELECTOR-16}",
+            "normal": "\N{PACKAGE}\N{VARIATION SELECTOR-16}",
+        }
+        chest_type = types[type]
+        msg = ""
+        async with self.config.user(ctx.author).chests() as chests:
+            if chests[chest_type] < 1:
+                return await ctx.send("You don't have any of them chests silly.")
+            chests[chest_type] -= 1
+            if type in ["legendary", "locked"]:
+                keys = await self.config.user(ctx.author).get_raw("keys", "\N{KEY}")
+                if keys < 1:
+                    return await ctx.send(
+                        "You don't have any keys to unlock this chest."
+                    )
+                msg += "You take one of your rusty keys from your fishing bag and unlock the chest."
+                await self.config.user(ctx.author).set_raw("keys", "\N{KEY}", value=keys - 1)
+            else:
+                msg += "You open the chest."
+        reward = random.choices(
+            list(CHEST_REWARDS[chest_type].keys()),
+            list(CHEST_REWARDS[chest_type].values()),
+            k=1,
+        )[0]
+        if reward == "cash":
+            amount = random.randint(
+                CASH_REWARDS[chest_type][0], CASH_REWARDS[chest_type][1]
+            )
+            try:
+                await bank.deposit_credits(ctx.author, amount)
+                msg += f"\nYou find {amount} {await bank.get_currency_name(ctx.guild)} inside the chest."
+            except BalanceTooHigh as e:
+                await bank.set_balance(ctx.author, e.max_balance)
+                msg += f"\nYou find {amount} {await bank.get_currency_name(ctx.guild)} inside the chest. Your bank has reached max capacity."
+        else:
+            msg += f"\nYou find a {reward.title()} inside the chest!"
+            async with self.config.user(ctx.author).all_rods() as rods:
+                rods[reward.lower()] += 1
+        await ctx.maybe_send_embed(msg)
 
     @commands.is_owner()
     @commands.command()
