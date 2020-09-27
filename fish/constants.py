@@ -29,7 +29,7 @@ CHESTS = [
 ]
 
 WEEKEND_BONUS = {
-    "keys": 0.0,
+    "keys": 1.0,
     "legendary": 1.4,
     "epic": 1.5,
     "rare": 1.6,
