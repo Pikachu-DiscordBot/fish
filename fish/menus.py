@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Iterable
 from redbot.core import commands
 from redbot.core.commands import Context
 
