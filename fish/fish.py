@@ -9,15 +9,15 @@ import discord
 import tabulate
 from redbot.core import Config, bank, commands
 from redbot.core.errors import BalanceTooHigh
-from redbot.core.utils._dpy_menus_utils import (
-    SimpleHybridMenu,
-)  # WARNING: Wont work on normal current red version
+# from redbot.core.utils._dpy_menus_utils import (
+#     SimpleHybridMenu,
+# )  # WARNING: Wont work on normal current red version
 from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
 from redbot.core.utils.predicates import MessagePredicate
 
 from .constants import *
 from .functions import check_weekend, get_leaderboard
-from .menus import LeaderboardSource
+from .menus import LeaderboardSource, SimpleHybridMenu
 
 
 class Fish(commands.Cog):

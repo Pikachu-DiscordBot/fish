@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Any
+from redbot.core import commands
 
 import discord
 from redbot.core.i18n import Translator
@@ -80,3 +81,49 @@ class LeaderboardSource(menus.ListPageSource):
         )
         embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return embed
+
+
+
+class SimpleHybridMenu(HybridMenu, inherit_buttons=True):
+    def __init__(
+        self,
+        source: menus.PageSource,
+        cog: Optional[commands.Cog] = None,
+        clear_reactions_after: bool = True,
+        delete_message_after: bool = True,
+        add_reactions: bool = True,
+        timeout: int = 60,
+        accept_keywords: bool = False,
+        **kwargs: Any,
+    ):
+        if accept_keywords:
+            keyword_to_reaction_mapping = {
+                _("last"): [
+                    "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
+                ],
+                _("first"): [
+                    "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
+                ],
+                _("next"): [
+                    "\N{BLACK RIGHT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+                ],
+                _("previous"): [
+                    "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+                ],
+                _("prev"): [
+                    "\N{BLACK LEFT-POINTING TRIANGLE}\N{VARIATION SELECTOR-16}",
+                ],
+                _("close"): ["\N{CROSS MARK}"],
+            }
+        else:
+            keyword_to_reaction_mapping = None
+        super().__init__(
+            source=source,
+            cog=cog,
+            add_reactions=add_reactions,
+            timeout=timeout,
+            clear_reactions_after=clear_reactions_after,
+            delete_message_after=delete_message_after,
+            keyword_to_reaction_mapping=keyword_to_reaction_mapping,
+            **kwargs,
+        )
