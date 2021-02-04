@@ -7,7 +7,8 @@ from redbot.core.commands import Context
 import discord
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import escape, humanize_number
-from redbot.vendored.discord.ext import menus, First, Last, button
+from redbot.vendored.discord.ext import menus
+from redbot.vendored.discord.ext.menus import First, Last, button
 
 _ = Translator("Adventure", __file__)
 log = logging.getLogger("red.cogs.adventure.menus")
