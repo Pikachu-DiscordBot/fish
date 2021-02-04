@@ -1,0 +1,17 @@
+{
+    "author": [
+      "flare(flare#0001)",
+      "TrustyJAID",
+      "Sitryk"
+    ],
+    "install_msg": "Fishing cog, originally made private for Pikachu & friends.",
+    "name": "Fish",
+    "disabled": false,
+    "short": "Fishing, written by flare & improved by Trusty and Sitryk.",
+    "description": "Fishing, written by flare & improved by Trusty and Sitryk.",
+    "tags": [
+      "fish"
+    ],
+    "min_bot_version": "3.4.0",
+    "hidden": false
+  }
