@@ -559,7 +559,7 @@ class Fish(commands.Cog):
                 "Alright then, you leave the shop without purchasing anything."
             )
             return
-        await bank.withdraw_credits(ctx.author, price)
+        await bank.withdraw_credits(ctx.author, int(price))
         async with self.config.user(ctx.author).all_rods() as rods:
             rods[item.lower()] += 1
         await ctx.send(f"Congratulations on your new purchase of a {item.title()}!")
