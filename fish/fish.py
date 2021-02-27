@@ -71,6 +71,7 @@ class Fish(commands.Cog):
                 "trusty rod": 0,
                 "pikachu rod": 0,
             },
+            has_fished=False,
         )
 
     @commands.group(invoke_without_command=True)
@@ -81,6 +82,9 @@ class Fish(commands.Cog):
             return await ctx.send("You think you can trick me? Nice try.")
         if not await bank.can_spend(ctx.author, 10):
             return await ctx.send("You can't afford to cast out your line!")
+        if not await self.config.user(ctx.author).has_fished():
+            await ctx.send(f"Fish has more commands available by typing `{ctx.clean_prefix}help fish`")
+            await self.config.user(ctx.author).has_fished.set(True)
 
         if random.randint(1, 100) == 100:
             a = random.randint(200, 490)
