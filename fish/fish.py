@@ -540,10 +540,10 @@ class Fish(commands.Cog):
             )
             await ctx.send(embed=embed)
             return
-        if item not in RODS[1:]:  # Will eventually have more options.
+        if item.lower() not in RODS[1:]:  # Will eventually have more options.
             await ctx.send("No such item exists.")
             return
-        price = RODS_PRICES[item]
+        price = RODS_PRICES[item.lower()]
         if not await bank.can_spend(ctx.author, price):
             return await ctx.send("You cannot afford that item.")
         msg = ""
